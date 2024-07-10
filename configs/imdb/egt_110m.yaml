@@ -2,7 +2,7 @@ scheme: imdb
 model_name: egt_110m
 distributed: false         # Set = true for multi-gpu
 batch_size: 1             # For 6 GPUs: 12//6=2
-model_height: 30
+model_height: 1
 node_width: 32642
 edge_width: 10
 num_heads: 1
