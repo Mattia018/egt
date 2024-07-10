@@ -1,11 +1,5 @@
 # Edge-augmented Graph Transformer (PyTorch)
 
-## News
-* 02/09/2024 - The preprint of our paper ["Triplet Interaction Improves Graph Transformers: Accurate Molecular Graph Learning with Triplet Graph Transformers"](https://arxiv.org/abs/2402.04538) is now available on ArXiv.  We achieved SOTA results on PCQM4Mv2, OC20 IS2RE, QM9, MOLPCBA and LIT-PCBA. We will include our new results, and methods, along with model weights soon at <https://github.com/shamim-hussain/tgt>.
-* 11/23/2023 - We achieved SOTA results (again) on the [PCQM4M-V2](https://ogb.stanford.edu/docs/lsc/) dataset by incorporating triangular attention and 3D molecular structure. You can find the new implementation at <https://github.com/shamim-hussain/egt_triangular> and a [technical report](https://github.com/shamim-hussain/egt_triangular/blob/master/Report.pdf) (full paper coming soon!).
-* 06/21/2022 - The trained checkpoints on the [PCQM4M-V2](https://ogb.stanford.edu/docs/lsc/) have been released. They are available at <https://zenodo.org/record/6680242>. For additional information, see the ["Download Trained Model Checkpoints"](#download-trained-model-checkpoints) section below.
-* 06/05/2022 - The [accepted prerprint](https://arxiv.org/abs/2108.03348) our paper in KDD '22 is now available on arXiv. It includes discussions on dynamic centrality scalers, random masking, attention dropout and other details about the latest experiments and results. Note that the title is changed to **"Global Self-Attention as a Replacement for Graph Convolution"**.
-* 05/18/2022 - Our paper "Global Self-Attention as a Replacement for Graph Convolution" has been accepted at [KDD'22](https://kdd.org/kdd2022/). The preprint at arXiv will be updated soon with the latest version of the paper.
 
 ## Introduction
 
@@ -63,9 +57,6 @@ python run_training.py 'scheme: pcqm4m' 'model_height: 6'
 python make_predictions.py configs/pcqm4m/egt_47m.yaml 'evaluate_on: ["val"]'
 ```
 
-### More About Training
-
-Once the training is started a model folder will be created in the *models* directory, under the specified dataset name. This folder will contain a copy of the input config file, for the convenience of resuming training/evaluation. Also, it will contain a config.yaml which will contain all configs, including unspecified default values, used for the training. Training will be checkpointed per epoch. In the case of any interruption, you can resume training by running the *run_training.py* with the config.yaml file again.
 
 ### Configs
 There many different configurations. The only **required** configuration is `scheme`, which specifies the training scheme. If the other configurations are not specified, a default value will be assumed for them. Here are some of the commonly used configurations:
