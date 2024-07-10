@@ -509,6 +509,7 @@ class TrainingBase:
 
     
     def train_model(self):
+        
         if self.is_main_rank: 
             history = self.load_history()
         starting_epoch = self.state.current_epoch
