@@ -69,6 +69,7 @@ def cached_property(func):
 
 class TrainingBase:
     def __init__(self, config=None, ddp_rank=0, ddp_world_size=1):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.config_input = config
         self.config = self.get_default_config()
         if config is not None:
