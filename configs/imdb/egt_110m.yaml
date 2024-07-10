@@ -3,7 +3,7 @@ model_name: egt_110m
 distributed: false         # Set = true for multi-gpu
 batch_size: 2             # For 6 GPUs: 12//6=2
 model_height: 30
-node_width: 3066
+node_width: 32642
 edge_width: 10
 num_heads: 1
 num_epochs: 10
