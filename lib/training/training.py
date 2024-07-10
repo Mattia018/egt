@@ -83,7 +83,7 @@ class TrainingBase:
         self.ddp_world_size = ddp_world_size
         self.is_distributed = (self.ddp_world_size > 1)
         self.is_main_rank = (self.ddp_rank == 0)
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
 
     @cached_property
     def train_dataset(self):
