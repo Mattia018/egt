@@ -12,6 +12,9 @@ import os,sys
 
 from tqdm import tqdm
 
+
+os.environ['CUDA_VISIBLE_DEVICES'] = '0' 
+
 from lib.utils.dotdict import HDict
 HDict.L.update_globals({'path':os.path})
 

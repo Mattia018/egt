@@ -6,6 +6,9 @@ from lib.training.training_mixins import SaveModel, VerboseLR
 from lib.utils.dotdict import HDict
 import torch
 from lib.data.graph_dataset import graphdata_collate
+import os
+
+os.environ['CUDA_VISIBLE_DEVICES'] = '0' 
 
 class EGTTraining(TestingBase,TrainingBase):
     def get_default_config(self):
