@@ -1,0 +1,5 @@
+# Ignora la cartella cache_data
+cache_data/
+
+# Ignora la cartella models
+models/
