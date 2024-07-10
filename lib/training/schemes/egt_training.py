@@ -103,7 +103,7 @@ class EGTTraining(TestingBase,TrainingBase):
         model_config, model_class = self.get_model_config()
         if model_class is None:
             raise NotImplementedError
-        model = model_class(**model_config)#.cuda()
+        model = model_class(**model_config).cuda()
         return model
     
     def prepare_for_training(self):
