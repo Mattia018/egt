@@ -158,7 +158,7 @@ class TrainingBase:
     
     @cached_property
     def model(self):
-        model = self.base_model
+        model = self.base_model.to(self.device)
         if self.is_distributed:
             model = torch.nn.parallel.DistributedDataParallel(model,device_ids=[self.ddp_rank],
                                                               output_device=self.ddp_rank)
