@@ -14,24 +14,25 @@ from tqdm import tqdm
 
 import logging
 
-class ExcludePrefixFormatter(logging.Formatter):
-    def __init__(self, excluded_prefixes):
+import re
+
+# Funzione per escludere i messaggi che iniziano con determinati prefissi
+class ExcludePrefixFilter(logging.Filter):
+    def __init__(self, prefixes):
         super().__init__()
-        self.excluded_prefixes = excluded_prefixes
+        self.prefixes = prefixes
 
-    def format(self, record):
-        message = record.msg
-        for prefix in self.excluded_prefixes:
-            if message.startswith(prefix):
-                return ""  # Restituisci una stringa vuota per escludere il messaggio
-        return super().format(record)
+    def filter(self, record):
+        for prefix in self.prefixes:
+            if record.getMessage().startswith(prefix):
+                return False
+        return True
 
-# Configurazione del logger
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+# Configura il logger di base
+logging.basicConfig(level=logging.INFO, format='%(message)s')
 
-# Lista di prefissi da escludere
-excluded_prefixes = [
+# Aggiungi il filtro per escludere i messaggi indesiderati
+exclude_prefixes = [
     "Node features shape:",
     "Max node feature value:",
     "Embedding layer size:",
@@ -39,15 +40,9 @@ excluded_prefixes = [
     "Feature matrix shape:"
 ]
 
-# Rimuovi eventuali handler esistenti per evitare duplicazioni di output
-for handler in logger.handlers[:]:
-    logger.removeHandler(handler)
-
-# Aggiungi un nuovo handler con la formattazione personalizzata
-formatter = ExcludePrefixFormatter(excluded_prefixes)
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+# Applica il filtro al logger di 'torch'
+torch_logger = logging.getLogger('torch')
+torch_logger.addFilter(ExcludePrefixFilter(exclude_prefixes))
 
 
 # Device cuda
