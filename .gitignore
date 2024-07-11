@@ -2,4 +2,4 @@
 cache_data/
 
 # Ignora la cartella models
-models/
+#models/
