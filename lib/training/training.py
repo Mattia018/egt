@@ -14,41 +14,6 @@ from tqdm import tqdm
 
 import logging
 
-# Definizione della classe di formattazione per escludere i messaggi con prefissi specifici
-class ExcludePrefixFormatter(logging.Formatter):
-    def __init__(self, prefix_list):
-        super().__init__()
-        self.prefix_list = prefix_list
-
-    def format(self, record):
-        for prefix in self.prefix_list:
-            if record.msg.startswith(prefix):
-                return ""  # Se il messaggio inizia con uno dei prefissi, non viene restituita alcuna stringa
-        return super().format(record)
-
-# Configurazione del logger
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
-# Escludi i messaggi con i prefissi indesiderati
-excluded_prefixes = [
-    "Node features shape:",
-    "Max node feature value:",
-    "Embedding layer size:",
-    "Distance matrix shape:",
-    "Feature matrix shape:"
-]
-
-# Creazione di un handler di logging (es. console)
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
-
-# Applica la formattazione personalizzata per escludere i prefissi
-formatter = ExcludePrefixFormatter(excluded_prefixes)
-console_handler.setFormatter(formatter)
-
-# Aggiungi l'handler al logger
-logger.addHandler(console_handler)
 
 
 # Device cuda
