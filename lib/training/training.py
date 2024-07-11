@@ -13,8 +13,43 @@ import os,sys
 from tqdm import tqdm
 
 import logging
-logging.getLogger('torch').setLevel(logging.WARNING)
 
+
+# Log filter
+
+
+class ExcludePrefixFilter(logging.Filter):
+    def __init__(self, excluded_prefixes):
+        super().__init__()
+        self.excluded_prefixes = excluded_prefixes
+
+    def filter(self, record):
+        message = record.getMessage()
+        for prefix in self.excluded_prefixes:
+            if message.startswith(prefix):
+                return False
+        return True
+
+# Configurazione del logger
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# Lista di prefissi da escludere
+excluded_prefixes = [
+    "Node features shape:",
+    "Max node feature value:",
+    "Embedding layer size:",
+    "Distance matrix shape:",
+    "Feature matrix shape:"
+]
+
+# Aggiungi il filtro per escludere i messaggi con i prefissi specificati
+logger.addFilter(ExcludePrefixFilter(excluded_prefixes))
+
+
+
+
+# Device cuda
 device = torch.device("cuda")
 
 from lib.utils.dotdict import HDict
