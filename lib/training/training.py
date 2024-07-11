@@ -12,6 +12,9 @@ import os,sys
 
 from tqdm import tqdm
 
+import logging
+logging.getLogger('torch').setLevel(logging.WARNING)
+
 device = torch.device("cuda")
 
 from lib.utils.dotdict import HDict
