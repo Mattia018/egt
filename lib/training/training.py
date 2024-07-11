@@ -14,21 +14,17 @@ from tqdm import tqdm
 
 import logging
 
-
-# Log filter
-
-
-class ExcludePrefixFilter(logging.Filter):
+class ExcludePrefixFormatter(logging.Formatter):
     def __init__(self, excluded_prefixes):
         super().__init__()
         self.excluded_prefixes = excluded_prefixes
 
-    def filter(self, record):
-        message = record.getMessage()
+    def format(self, record):
+        message = record.msg
         for prefix in self.excluded_prefixes:
             if message.startswith(prefix):
-                return False
-        return True
+                return ""  # Restituisci una stringa vuota per escludere il messaggio
+        return super().format(record)
 
 # Configurazione del logger
 logger = logging.getLogger()
@@ -43,10 +39,17 @@ excluded_prefixes = [
     "Feature matrix shape:"
 ]
 
-# Aggiungi il filtro per escludere i messaggi con i prefissi specificati
-logger.addFilter(ExcludePrefixFilter(excluded_prefixes))
+# Imposta una nuova istanza della formattazione personalizzata
+formatter = ExcludePrefixFormatter(excluded_prefixes)
 
+# Rimuovi eventuali handler esistenti per evitare duplicazioni di output
+for handler in logger.handlers[:]:
+    logger.removeHandler(handler)
 
+# Aggiungi un nuovo handler con la formattazione personalizzata
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 # Device cuda
