@@ -305,8 +305,8 @@ class TrainingBase:
         elif hasattr(batch, 'cuda'):
             return batch.cuda(non_blocking=True)
         elif hasattr(batch, 'items'):
-            #return batch.__class__((k,v.cuda(non_blocking=True)) for k,v in batch.items())
-            return batch.__class__((k, v) for k, v in batch.items())
+            return batch.__class__((k,v.cuda(non_blocking=True)) for k,v in batch.items())
+            #return batch.__class__((k, v) for k, v in batch.items())
         elif hasattr(batch, '__iter__'):
             return batch.__class__(v.cuda(non_blocking=True) for v in batch)
         else:
