@@ -39,14 +39,12 @@ excluded_prefixes = [
     "Feature matrix shape:"
 ]
 
-# Imposta una nuova istanza della formattazione personalizzata
-formatter = ExcludePrefixFormatter(excluded_prefixes)
-
 # Rimuovi eventuali handler esistenti per evitare duplicazioni di output
 for handler in logger.handlers[:]:
     logger.removeHandler(handler)
 
 # Aggiungi un nuovo handler con la formattazione personalizzata
+formatter = ExcludePrefixFormatter(excluded_prefixes)
 handler = logging.StreamHandler()
 handler.setFormatter(formatter)
 logger.addHandler(handler)
