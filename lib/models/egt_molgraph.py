@@ -55,16 +55,16 @@ class EGT_MOL(EGT):
         nodef = g.node_features.long()              # (b,i,f)
         nodem = g.node_mask.float()                 # (b,i)
 
-        print(f"Node features shape: {nodef.shape}")
-        print(f"Max node feature value: {nodef.max().item()}, Min: {nodef.min().item()}")
-        print(f"Embedding layer size: {self.nodef_embed.num_embeddings}")
+        #print(f"Node features shape: {nodef.shape}")
+        #print(f"Max node feature value: {nodef.max().item()}, Min: {nodef.min().item()}")
+        #print(f"Embedding layer size: {self.nodef_embed.num_embeddings}")
         
         dm0 = g.distance_matrix                     # (b,i,j)
         dm = dm0.long().clamp(max=self.upto_hop+1)  # (b,i,j)
         featm = g.feature_matrix.long()             # (b,i,j,f)
 
-        print(f"Distance matrix shape: {dm.shape}")
-        print(f"Feature matrix shape: {featm.shape}")
+        #print(f"Distance matrix shape: {dm.shape}")
+        #print(f"Feature matrix shape: {featm.shape}")
 
         if nodef.max() >= self.nodef_embed.num_embeddings:
             raise ValueError(f"Input contains indices larger than embedding size ({self.nodef_embed.num_embeddings})")
