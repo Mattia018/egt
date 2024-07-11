@@ -14,25 +14,24 @@ from tqdm import tqdm
 
 import logging
 
-import re
-
-# Funzione per escludere i messaggi che iniziano con determinati prefissi
-class ExcludePrefixFilter(logging.Filter):
-    def __init__(self, prefixes):
+# Definizione della classe di formattazione per escludere i messaggi con prefissi specifici
+class ExcludePrefixFormatter(logging.Formatter):
+    def __init__(self, prefix_list):
         super().__init__()
-        self.prefixes = prefixes
+        self.prefix_list = prefix_list
 
-    def filter(self, record):
-        for prefix in self.prefixes:
-            if record.getMessage().startswith(prefix):
-                return False
-        return True
+    def format(self, record):
+        for prefix in self.prefix_list:
+            if record.msg.startswith(prefix):
+                return ""  # Se il messaggio inizia con uno dei prefissi, non viene restituita alcuna stringa
+        return super().format(record)
 
-# Configura il logger di base
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+# Configurazione del logger
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
-# Aggiungi il filtro per escludere i messaggi indesiderati
-exclude_prefixes = [
+# Escludi i messaggi con i prefissi indesiderati
+excluded_prefixes = [
     "Node features shape:",
     "Max node feature value:",
     "Embedding layer size:",
@@ -40,9 +39,16 @@ exclude_prefixes = [
     "Feature matrix shape:"
 ]
 
-# Applica il filtro al logger di 'torch'
-torch_logger = logging.getLogger('torch')
-torch_logger.addFilter(ExcludePrefixFilter(exclude_prefixes))
+# Creazione di un handler di logging (es. console)
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+
+# Applica la formattazione personalizzata per escludere i prefissi
+formatter = ExcludePrefixFormatter(excluded_prefixes)
+console_handler.setFormatter(formatter)
+
+# Aggiungi l'handler al logger
+logger.addHandler(console_handler)
 
 
 # Device cuda
