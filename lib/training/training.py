@@ -12,7 +12,7 @@ import os,sys
 
 from tqdm import tqdm
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda")
 
 from lib.utils.dotdict import HDict
 HDict.L.update_globals({'path':os.path})
