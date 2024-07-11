@@ -12,8 +12,7 @@ import os,sys
 
 from tqdm import tqdm
 
-
-os.environ['CUDA_VISIBLE_DEVICES'] = '0' 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 from lib.utils.dotdict import HDict
 HDict.L.update_globals({'path':os.path})
@@ -160,7 +159,7 @@ class TrainingBase:
     
     @cached_property
     def model(self):
-        model = self.base_model
+        model = self.base_model.to(device)
         if self.is_distributed:
             model = torch.nn.parallel.DistributedDataParallel(model,device_ids=[self.ddp_rank],
                                                               output_device=self.ddp_rank)
