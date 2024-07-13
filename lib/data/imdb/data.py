@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from torch_geometric.datasets import IMDB
-from torch_geometric.data import Data
+from torch_geometric.data import Data, DataLoader
 from torch_geometric.utils import to_undirected
 
 from sklearn.model_selection import train_test_split
@@ -17,13 +17,12 @@ class IMDBDataset(DatasetBase):
     def __init__(self,
                  dataset_path,
                  dataset_name='IMDB',
-                 subset_size=50,
-                 **kwargs
-                 ):
+                 subset_size=100,  # Aggiunto parametro subset_size
+                 **kwargs):
         super().__init__(dataset_name=dataset_name,
                          **kwargs)
         self.dataset_path = dataset_path
-        self.subset_size = subset_size
+        self.subset_size = subset_size  # Salva il parametro subset_size
 
     @property
     def dataset(self):
@@ -33,103 +32,66 @@ class IMDBDataset(DatasetBase):
             self._dataset = IMDB(root=self.dataset_path)
             return self._dataset
 
-    def create_mam_graph(self, data):
-        if self.subset_size is None:
-            subset_indices = torch.arange(data['movie'].num_nodes)
-        else:
-            subset_indices = torch.arange(self.subset_size)
-
-        # Ottieni gli edge di tipo 'movie', 'actor' e 'actor', 'movie'
-        ma_edges = data['movie', 'actor'].edge_index
-
-        # Filtra gli edge per includere solo quelli che coinvolgono i film selezionati
-        mask = torch.isin(ma_edges[0], subset_indices)
-        ma_edges = ma_edges[:, mask]
-
-        am_edges = ma_edges.flip(0)
-
-        # Crea una matrice di adiacenza sparse per entrambi i tipi di edge
-        ma_adj = torch.sparse_coo_tensor(ma_edges, torch.ones(ma_edges.size(1)),
-                                         (subset_indices.size(0), data['actor'].num_nodes))
-        am_adj = torch.sparse_coo_tensor(am_edges, torch.ones(am_edges.size(1)),
-                                         (data['actor'].num_nodes, subset_indices.size(0)))
-
-        # Moltiplica le due matrici di adiacenza per ottenere il grafo MAM
-        mam_adj = torch.sparse.mm(ma_adj, am_adj)
-
-        # Ottieni gli edge index del grafo MAM
-        mam_edge_index = mam_adj.coalesce().indices()
-
-        return Data(edge_index=to_undirected(mam_edge_index), num_nodes=subset_indices.size(0))
-
     @property
     def record_tokens(self):
         try:
             return self._record_tokens
         except AttributeError:
             split = {'training': 'train',
-                     'validation': 'val',
+                     'validation': 'valid',
                      'test': 'test'}[self.split]
-
-            # Creiamo uno split manualmente
-            data = self.dataset[0]
-
-            # Crea il grafo MAM
-            mam_data = self.create_mam_graph(data)
-
-            # Suddividere manualmente gli edge in training, validation e test set
-            edge_index = mam_data.edge_index.T.numpy()
-            train_val_edges, test_edges = train_test_split(edge_index, test_size=0.2, random_state=42)
-            train_edges, val_edges = train_test_split(train_val_edges, test_size=0.1, random_state=42)
-
-            train_mask = np.zeros(edge_index.shape[0], dtype=bool)
-            val_mask = np.zeros(edge_index.shape[0], dtype=bool)
-            test_mask = np.zeros(edge_index.shape[0], dtype=bool)
-
-            train_mask[np.isin(edge_index, train_edges).all(axis=1)] = True
-            val_mask[np.isin(edge_index, val_edges).all(axis=1)] = True
-            test_mask[np.isin(edge_index, test_edges).all(axis=1)] = True
-
-            mam_data.train_mask = torch.tensor(train_mask)
-            mam_data.val_mask = torch.tensor(val_mask)
-            mam_data.test_mask = torch.tensor(test_mask)
-
+            num_samples = self.dataset[0].num_nodes
+            if self.subset_size:  # Se subset_size è definito, usa solo un sottoinsieme dei nodi
+                num_samples = min(self.subset_size, num_samples)
             if split == 'train':
-                self._record_tokens = mam_data.train_mask.nonzero(as_tuple=False).view(-1)
-            elif split == 'val':
-                self._record_tokens = mam_data.val_mask.nonzero(as_tuple=False).view(-1)
+                self._record_tokens = torch.arange(0, int(0.7 * num_samples))
+            elif split == 'valid':
+                self._record_tokens = torch.arange(int(0.7 * num_samples), int(0.85 * num_samples))
             elif split == 'test':
-                self._record_tokens = mam_data.test_mask.nonzero(as_tuple=False).view(-1)
-
+                self._record_tokens = torch.arange(int(0.85 * num_samples), num_samples)
             return self._record_tokens
 
     def read_record(self, token):
         data = self.dataset[0]
-        mam_data = self.create_mam_graph(data)
-        if self.subset_size is None:
-            num_nodes = data['movie'].num_nodes
-            node_features = data['movie'].x
-            target = data['movie'].y
-        else:
-            num_nodes = self.subset_size
-            node_features = data['movie'].x[:self.subset_size]
-            target = data['movie'].y[:self.subset_size]
+        movie_idx = token.numpy() if isinstance(token, torch.Tensor) else token
+        mam_edge_index = self.extract_mam(data, movie_idx)
+
+        if mam_edge_index.size == 0:
+            print(f"No MAM edges found for movie index {movie_idx}")
 
         graph = {
-            'num_nodes': np.array(num_nodes, dtype=np.int16),
-            'edges': mam_data.edge_index.T.to(torch.int16).numpy(),
-            'edge_features': mam_data.edge_attr.to(torch.int16).numpy() if mam_data.edge_attr is not None else np.array(
-                []),
-            'node_features': node_features.to(torch.int16).numpy() if node_features is not None else np.array([]),
-            'target': target.to(torch.float32).numpy()
+            'num_nodes': np.array(data['movie'].num_nodes, dtype=np.int16),
+            'edges': mam_edge_index.T.astype(np.int16) if mam_edge_index.size > 0 else np.empty((0, 2), dtype=np.int16),
+            'edge_features': np.ones((mam_edge_index.shape[1], 1),
+                                     dtype=np.int16) if mam_edge_index.size > 0 else np.empty((0, 1), dtype=np.int16),
+            # dummy edge features
+            'node_features': data['movie'].x[:,:5].numpy().astype(np.int16),
+            'target': np.array(data['movie'].y[movie_idx], np.float32)
         }
         return graph
 
+    def extract_mam(self, data, movie_idx):
+        print("Available edge types:", data.edge_index_dict.keys())
+        # Verifica quali chiavi sono disponibili
+        if ('movie', 'to', 'actor') in data.edge_index_dict and ('actor', 'to', 'movie') in data.edge_index_dict:
+            movie_actor_edges = data['movie', 'to', 'actor'].edge_index
+            actor_movie_edges = data['actor', 'to', 'movie'].edge_index
+        else:
+            print("Required edge types ('movie', 'to', 'actor') or ('actor', 'to', 'movie') not found in data")
+            return np.array([], dtype=np.int64)
 
-# Aggiorna anche la funzione calculate_svd_encodings se necessario
-def calculate_svd_encodings(edges, num_nodes, calculated_dim):
-    # Implementazione della funzione SVD
-    pass
+        mam_edge_index = []
+        for movie_actor in movie_actor_edges.T:
+            if movie_actor[0].numpy() == movie_idx:
+                actor = movie_actor[1].numpy()
+                for actor_movie in actor_movie_edges.T:
+                    if actor_movie[0].numpy() == actor:
+                        mam_edge_index.append([movie_actor[0], actor_movie[1]])
+
+        if not mam_edge_index:
+            print(f"No MAM edges found for movie index {movie_idx}")
+
+        return np.array(mam_edge_index).T if mam_edge_index else np.array([], dtype=np.int64)
 
 
 class IMDBGraphDataset(GraphDataset, IMDBDataset):
