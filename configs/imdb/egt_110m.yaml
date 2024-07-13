@@ -1,19 +1,19 @@
 scheme: imdb
 model_name: egt_110m
 distributed: false         # Set = true for multi-gpu
-batch_size: 1             # For 6 GPUs: 12//6=2
+batch_size: 4             # For 6 GPUs: 12//6=2
 model_height: 1
-node_width: 10000
-edge_width: 10
+node_width: 1
+edge_width: 1
 num_heads: 1
-num_epochs: 10
+num_epochs: 1
 max_lr: 0.0001
 attn_dropout: 0.3
 lr_warmup_steps: 1000
 lr_total_steps: 3000
 node_ffn_multiplier: 1.0
 edge_ffn_multiplier: 1.0
-upto_hop: 16
+#upto_hop: 16
 dataloader_workers: 1      # For multi-process data fetch
 scale_degree: true
 num_virtual_nodes: 4
