@@ -1,12 +1,7 @@
 import numpy as np
 import torch
 from torch_geometric.datasets import IMDB
-from torch_geometric.data import Data, DataLoader
-from torch_geometric.utils import to_undirected
-
-from sklearn.model_selection import train_test_split
-import numba as nb
-
+from torch_geometric.data import DataLoader
 from ..dataset_base import DatasetBase
 from ..graph_dataset import GraphDataset
 from ..graph_dataset import SVDEncodingsGraphDataset
@@ -71,7 +66,7 @@ class IMDBDataset(DatasetBase):
         return graph
 
     def extract_mam(self, data, movie_idx):
-        #print("Available edge types:", data.edge_index_dict.keys())
+        print("Available edge types:", data.edge_index_dict.keys())
         # Verifica quali chiavi sono disponibili
         if ('movie', 'to', 'actor') in data.edge_index_dict and ('actor', 'to', 'movie') in data.edge_index_dict:
             movie_actor_edges = data['movie', 'to', 'actor'].edge_index

@@ -7,7 +7,6 @@ from lib.utils.dotdict import HDict
 import torch
 from lib.data.graph_dataset import graphdata_collate
 
-
 class EGTTraining(TestingBase,TrainingBase):
     def get_default_config(self):
         config = super().get_default_config()
@@ -20,7 +19,7 @@ class EGTTraining(TestingBase,TrainingBase):
             model_height        = 4,
             node_width          = 64,
             edge_width          = 64,
-            num_heads           = 8,
+            num_heads           = 1,
             node_dropout        = 0.,
             edge_dropout        = 0.,
             node_ffn_dropout    = HDict.L('c:c.node_dropout'),
@@ -104,7 +103,7 @@ class EGTTraining(TestingBase,TrainingBase):
         model_config, model_class = self.get_model_config()
         if model_class is None:
             raise NotImplementedError
-        model = model_class(**model_config).cuda()
+        model = model_class(**model_config)#.cuda()
         return model
     
     def prepare_for_training(self):
