@@ -7,10 +7,10 @@ from .egt_layers import EGT_Layer, Graph
 
 class EGT_Base(nn.Module):
     def __init__(self,
-                 node_width          = 32       ,
-                 edge_width          = 1        ,
-                 num_heads           = 1         ,
-                 model_height        = 1         ,
+                 node_width          = 128       ,
+                 edge_width          = 32        ,
+                 num_heads           = 8         ,
+                 model_height        = 4         ,
                  node_mha_dropout    = 0.        ,
                  node_ffn_dropout    = 0.        ,
                  edge_mha_dropout    = 0.        ,
@@ -105,7 +105,7 @@ class EGT(EGT_Base):
         
         for layer in self.EGT_layers:
             g = layer(g)
-
+        
         g = self.final_embedding(g)
         
         outputs = self.output_block(g)

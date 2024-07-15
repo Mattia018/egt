@@ -12,11 +12,16 @@ import os,sys
 
 from tqdm import tqdm
 
+import logging
+
+
+
+# Device cuda
+device = torch.device("cuda")
+
 from lib.utils.dotdict import HDict
 HDict.L.update_globals({'path':os.path})
-import torch.multiprocessing as mp
 
-mp.set_start_method('spawn', force=True)
 def str_presenter(dumper, data):
   if len(data.splitlines()) > 1:  # check for multiline string
     return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
@@ -70,7 +75,7 @@ def cached_property(func):
 
 
 class TrainingBase:
-    def __init__(self, config=None, ddp_rank=0, ddp_world_size=1):
+    def __init__(self, config=None, ddp_rank=0, ddp_world_size=1):        
         self.config_input = config
         self.config = self.get_default_config()
         if config is not None:
@@ -85,8 +90,7 @@ class TrainingBase:
         self.ddp_world_size = ddp_world_size
         self.is_distributed = (self.ddp_world_size > 1)
         self.is_main_rank = (self.ddp_rank == 0)
-
-
+        
 
     @cached_property
     def train_dataset(self):
@@ -114,7 +118,6 @@ class TrainingBase:
             pin_memory=True,
         )
         print('COMMON kwargs ', common_kwargs)
-        self.is_distributed = False
         if self.config.dataloader_workers > 0:
             common_kwargs.update(
                 num_workers=self.config.dataloader_workers,
@@ -136,8 +139,6 @@ class TrainingBase:
             collate_fn=self.collate_fn,
             pin_memory=True,
         )
-        self.config.data_loader_workers = 0
-        self.is_distributed = False
         if self.config.dataloader_workers > 0:
             common_kwargs.update(
                 num_workers=self.config.dataloader_workers,
@@ -163,7 +164,7 @@ class TrainingBase:
     
     @cached_property
     def model(self):
-        model = self.base_model
+        model = self.base_model.to(device)
         if self.is_distributed:
             model = torch.nn.parallel.DistributedDataParallel(model,device_ids=[self.ddp_rank],
                                                               output_device=self.ddp_rank)
@@ -308,8 +309,8 @@ class TrainingBase:
         elif hasattr(batch, 'cuda'):
             return batch.cuda(non_blocking=True)
         elif hasattr(batch, 'items'):
-            #return batch.__class__((k,v.cuda(non_blocking=True)) for k,v in batch.items())
-            return batch.__class__((k, v) for k, v in batch.items())
+            return batch.__class__((k,v.cuda(non_blocking=True)) for k,v in batch.items())
+            #return batch.__class__((k, v) for k, v in batch.items())
         elif hasattr(batch, '__iter__'):
             return batch.__class__(v.cuda(non_blocking=True) for v in batch)
         else:
@@ -515,6 +516,7 @@ class TrainingBase:
 
     
     def train_model(self):
+        
         if self.is_main_rank: 
             history = self.load_history()
         starting_epoch = self.state.current_epoch
