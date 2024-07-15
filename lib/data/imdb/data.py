@@ -66,7 +66,7 @@ class IMDBDataset(DatasetBase):
         return graph
 
     def extract_mam(self, data, movie_idx):
-        print("Available edge types:", data.edge_index_dict.keys())
+        #print("Available edge types:", data.edge_index_dict.keys())
         # Verifica quali chiavi sono disponibili
         if ('movie', 'to', 'actor') in data.edge_index_dict and ('actor', 'to', 'movie') in data.edge_index_dict:
             movie_actor_edges = data['movie', 'to', 'actor'].edge_index
