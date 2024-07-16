@@ -17,7 +17,7 @@ import logging
 
 
 # Device cuda
-device = torch.device("cuda")
+#device = torch.device("cuda")
 
 from lib.utils.dotdict import HDict
 HDict.L.update_globals({'path':os.path})
@@ -86,6 +86,7 @@ class TrainingBase:
         
         self.state = self.get_default_state()
         
+        self.device = torch.device("cuda")
         self.ddp_rank = ddp_rank
         self.ddp_world_size = ddp_world_size
         self.is_distributed = (self.ddp_world_size > 1)
@@ -164,11 +165,15 @@ class TrainingBase:
     
     @cached_property
     def model(self):
-        model = self.base_model.to(device)
-        if self.is_distributed:
-            model = torch.nn.parallel.DistributedDataParallel(model,device_ids=[self.ddp_rank],
-                                                              output_device=self.ddp_rank)
-        return model
+        model = self.base_model.to(self.device)
+        # if self.is_distributed:
+        #     model = torch.nn.parallel.DistributedDataParallel(model,device_ids=[self.ddp_rank],
+        #                                                       output_device=self.ddp_rank)
+        if torch.cuda.device_count() > 1:
+            print("\ncount = torch.cuda.device_count()\n")
+            model = nn.DataParallel(model)  # Distribuisci il modello su più GPU
+        return model.to(self.device)
+        #return model
     
     @cached_property
     def optimizer(self):
