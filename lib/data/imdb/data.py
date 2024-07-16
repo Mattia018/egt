@@ -3,9 +3,9 @@ import torch
 from torch_geometric.datasets import IMDB
 from torch_geometric.data import Data, DataLoader
 from torch_geometric.utils import to_undirected
-
 from sklearn.model_selection import train_test_split
 import numba as nb
+from numba import njit
 
 from ..dataset_base import DatasetBase
 from ..graph_dataset import GraphDataset
@@ -54,7 +54,9 @@ class IMDBDataset(DatasetBase):
     def read_record(self, token):
         data = self.dataset[0]
         movie_idx = token.numpy() if isinstance(token, torch.Tensor) else token
-        mam_edge_index = self.extract_mam(data, movie_idx)
+        mam_edge_index = self.extract_mam(data['movie', 'to', 'actor'].edge_index.numpy(),
+                                          data['actor', 'to', 'movie'].edge_index.numpy(),
+                                          movie_idx)
 
         if mam_edge_index.size == 0:
             print(f"No MAM edges found for movie index {movie_idx}")
@@ -65,32 +67,21 @@ class IMDBDataset(DatasetBase):
             'edge_features': np.ones((mam_edge_index.shape[1], 1),
                                      dtype=np.int16) if mam_edge_index.size > 0 else np.empty((0, 1), dtype=np.int16),
             # dummy edge features
-            'node_features': data['movie'].x[:,:5].numpy().astype(np.int16),
+            'node_features': data['movie'].x[:, :5].numpy().astype(np.int16),
             'target': np.array(data['movie'].y[movie_idx], np.float32)
         }
         return graph
 
-    def extract_mam(self, data, movie_idx):
-        #print("Available edge types:", data.edge_index_dict.keys())
-        # Verifica quali chiavi sono disponibili
-        if ('movie', 'to', 'actor') in data.edge_index_dict and ('actor', 'to', 'movie') in data.edge_index_dict:
-            movie_actor_edges = data['movie', 'to', 'actor'].edge_index
-            actor_movie_edges = data['actor', 'to', 'movie'].edge_index
-        else:
-            print("Required edge types ('movie', 'to', 'actor') or ('actor', 'to', 'movie') not found in data")
-            return np.array([], dtype=np.int64)
-
+    @staticmethod
+    @njit
+    def extract_mam(movie_actor_edges, actor_movie_edges, movie_idx):
         mam_edge_index = []
         for movie_actor in movie_actor_edges.T:
-            if movie_actor[0].numpy() == movie_idx:
-                actor = movie_actor[1].numpy()
+            if movie_actor[0] == movie_idx:
+                actor = movie_actor[1]
                 for actor_movie in actor_movie_edges.T:
-                    if actor_movie[0].numpy() == actor:
+                    if actor_movie[0] == actor:
                         mam_edge_index.append([movie_actor[0], actor_movie[1]])
-
-        if not mam_edge_index:
-            print(f"No MAM edges found for movie index {movie_idx}")
-
         return np.array(mam_edge_index).T if mam_edge_index else np.array([], dtype=np.int64)
 
 

@@ -16,9 +16,6 @@ import logging
 
 
 
-# Device cuda
-#device = torch.device("cuda")
-
 from lib.utils.dotdict import HDict
 HDict.L.update_globals({'path':os.path})
 
@@ -169,8 +166,7 @@ class TrainingBase:
         # if self.is_distributed:
         #     model = torch.nn.parallel.DistributedDataParallel(model,device_ids=[self.ddp_rank],
         #                                                       output_device=self.ddp_rank)
-        if torch.cuda.device_count() > 1:
-            print("\ncount = torch.cuda.device_count()\n")
+        if torch.cuda.device_count() > 1:            
             model = nn.DataParallel(model)  # Distribuisci il modello su più GPU
         return model.to(self.device)
         #return model
