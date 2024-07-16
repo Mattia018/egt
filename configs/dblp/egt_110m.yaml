@@ -1,9 +1,9 @@
 scheme: dblp
 model_name: egt_110m
 distributed: false
-batch_size: 32
+batch_size: 2
 model_height: 8
-node_width: 256
+node_width: 64
 edge_width: 64
 num_heads: 8
 num_epochs: 50

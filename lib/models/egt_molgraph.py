@@ -66,8 +66,8 @@ class EGT_MOL(EGT):
         #print(f"Distance matrix shape: {dm.shape}")
         #print(f"Feature matrix shape: {featm.shape}")
 
-        if nodef.max() >= self.nodef_embed.num_embeddings:
-            raise ValueError(f"Input contains indices larger than embedding size ({self.nodef_embed.num_embeddings})")
+        # if nodef.max() >= self.nodef_embed.num_embeddings:
+        #     raise ValueError(f"Input contains indices larger than embedding size ({self.nodef_embed.num_embeddings})")
 
         
         h = self.nodef_embed(nodef).sum(dim=2)      # (b,i,w,h) -> (b,i,h)
