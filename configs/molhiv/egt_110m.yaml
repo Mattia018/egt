@@ -1,7 +1,7 @@
 scheme: molhiv
 model_name: egt_110m
-distributed: false         # Set = true for multi-gpu
-batch_size: 12             # For 6 GPUs: 12//6=2
+distributed: true         # Set = true for multi-gpu
+batch_size: 2             # For 6 GPUs: 12//6=2
 model_height: 30
 node_width: 768
 edge_width: 64
